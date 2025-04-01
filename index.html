@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cricket Score Tracker</title>
+    <link rel="stylesheet" href="styles.css"> <!-- Optional CSS for styling -->
+</head>
+<body>
+    <h1>Cricket Score Tracker</h1>
+    <button id="hitSixButton">Player Hits a Six</button>
+    <input type="file" id="fileInput" accept=".xlsx" /> <!-- Input to upload existing Excel file -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.17.0/xlsx.full.min.js"></script>
+    <script>
+        let scoreData = [];  // Store the new score data
+        let existingData = [];  // Store the data from the existing Excel file
+
+        // Event listener when the player hits a six
+        document.getElementById("hitSixButton").addEventListener("click", function() {
+            const currentDate = new Date().toISOString(); // Current date in ISO format
+            const playerName = "Shubhman Gill";  // Can be dynamic, just for example
+            const score = 6;  // A six is hit, so score is 6
+            const over = 2.1;
+            // Add the data to the new score data array
+            scoreData.push({ date: currentDate, player: playerName, score: score, over: over });
+
+            console.log("New Data logged:", scoreData);
+
+            // Call the function to update the Excel file with the new data
+            updateExcelFile();
+        });
+
+        // Function to update the Excel file
+        function updateExcelFile() {
+            const fileInput = document.getElementById("fileInput");
+            const file = fileInput.files[0];
+            if (!file) {
+                alert("Please upload an Excel file first.");
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = e.target.result;
+                const workbook = XLSX.read(data, { type: 'binary' });
+
+                // Assume the sheet we need is the first one
+                const sheetName = workbook.SheetNames[0];
+                const sheet = workbook.Sheets[sheetName];
+
+                // Convert the sheet to JSON (i.e., an array of rows)
+                existingData = XLSX.utils.sheet_to_json(sheet);
+
+                // Append the new score data to the existing data
+                existingData = existingData.concat(scoreData);
+
+                // Convert the updated data back to a worksheet
+                const updatedSheet = XLSX.utils.json_to_sheet(existingData);
+
+                // Create a new workbook and append the updated sheet
+                const updatedWorkbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(updatedWorkbook, updatedSheet, sheetName);
+
+                // Save the updated file
+                XLSX.writeFile(updatedWorkbook, "Updated_Cricket_Score_Data.xlsx");
+                alert("Excel file updated successfully!");
+            };
+
+            // Read the file as binary string
+            reader.readAsBinaryString(file);
+        }
+    </script>
+</body>
+</html>
